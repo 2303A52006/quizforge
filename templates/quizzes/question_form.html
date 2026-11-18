@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{% if question %}Edit question{% else %}Add question{% endif %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:teacher_list' %}">My quizzes</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'quizzes:manage' quiz.pk %}">{{ quiz.title }}</a></li>
+      <li class="breadcrumb-item active">{% if question %}Edit question{% else %}Add question{% endif %}</li>
+    </ol></nav>
+    <form method="post" class="card shadow-sm" novalidate>
+      <div class="card-body">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.text.id_for_label }}">Question</label>
+          {{ form.text }}
+          {% for error in form.text.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.topic.id_for_label }}">Topic tag</label>
+          {{ form.topic }}
+          <div class="form-text">{{ form.topic.help_text }}. Analytics groups results by this tag.</div>
+          {% for error in form.topic.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+
+        <label class="form-label">Options (tick the correct one)</label>
+        <div class="input-group mb-2">
+          <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct" value="1" aria-label="Option A is correct"{% if form.correct.value == "1" %} checked{% endif %}></div>
+          <span class="input-group-text">A</span>
+          {{ form.option_1 }}
+        </div>
+        {% for error in form.option_1.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+        <div class="input-group mb-2">
+          <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct" value="2" aria-label="Option B is correct"{% if form.correct.value == "2" %} checked{% endif %}></div>
+          <span class="input-group-text">B</span>
+          {{ form.option_2 }}
+        </div>
+        {% for error in form.option_2.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+        <div class="input-group mb-2">
+          <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct" value="3" aria-label="Option C is correct"{% if form.correct.value == "3" %} checked{% endif %}></div>
+          <span class="input-group-text">C</span>
+          {{ form.option_3 }}
+        </div>
+        {% for error in form.option_3.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+        <div class="input-group mb-2">
+          <div class="input-group-text"><input class="form-check-input mt-0" type="radio" name="correct" value="4" aria-label="Option D is correct"{% if form.correct.value == "4" %} checked{% endif %}></div>
+          <span class="input-group-text">D</span>
+          {{ form.option_4 }}
+        </div>
+        {% for error in form.option_4.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+        {% for error in form.correct.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+        <div class="mb-3 mt-3">
+          <label class="form-label" for="{{ form.explanation.id_for_label }}">Explanation (shown to students after submission)</label>
+          {{ form.explanation }}
+        </div>
+        <div class="form-text">Each question is worth 1 mark.</div>
+      </div>
+      <div class="card-footer d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary">{% if question %}Save changes{% else %}Save question{% endif %}</button>
+        {% if not question %}<button type="submit" name="save_and_add" value="1" class="btn btn-outline-primary">Save and add another</button>{% endif %}
+        <a class="btn btn-outline-secondary" href="{% url 'quizzes:manage' quiz.pk %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

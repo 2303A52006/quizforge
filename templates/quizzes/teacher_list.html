@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}My quizzes{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h3 mb-0">My quizzes</h2>
+  <a class="btn btn-primary" href="{% url 'quizzes:create' %}">+ New quiz</a>
+</div>
+
+{% if quizzes %}
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Title</th><th>Status</th><th>Questions</th><th>Finished attempts</th><th>Opens</th><th>Closes</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for quiz in quizzes %}
+        <tr>
+          <td><a class="fw-semibold text-decoration-none" href="{% url 'quizzes:manage' quiz.pk %}">{{ quiz.title }}</a></td>
+          <td>{% include "quizzes/_status_badge.html" with status=quiz.status %}</td>
+          <td>{{ quiz.num_questions }}</td>
+          <td>{{ quiz.num_submitted }}</td>
+          <td>{{ quiz.opens_at|date:"d M Y, H:i"|default:"-" }}</td>
+          <td>{{ quiz.closes_at|date:"d M Y, H:i"|default:"-" }}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'quizzes:manage' quiz.pk %}">Manage</a>
+            <a class="btn btn-sm btn-outline-success" href="{% url 'quizzes:analytics' quiz.pk %}">Analytics</a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">You have no quizzes yet. Click <strong>New quiz</strong> to build your first one.</div>
+{% endif %}
+{% endblock %}

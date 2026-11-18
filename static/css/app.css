@@ -1,0 +1,13 @@
+/* Small additions on top of Bootstrap's default look. */
+.timer-bar {
+  top: 0.5rem;
+  z-index: 1020;
+}
+
+.question-card .form-check-label {
+  cursor: pointer;
+}
+
+canvas {
+  max-width: 100%;
+}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+<div class="p-5 mb-4 bg-white border rounded-3 text-center">
+  <h1 class="display-5 fw-bold">QuizForge</h1>
+  <p class="lead text-muted mb-4">
+    Build timed quizzes, get them marked automatically, and see which topics your class is weak at.
+  </p>
+  {% if user.is_authenticated %}
+    {% if user.is_superuser %}
+      <p>You are logged in as an administrator. Create teacher accounts in the admin panel.</p>
+      <a class="btn btn-primary btn-lg" href="{% url 'admin:index' %}">Open admin panel</a>
+    {% endif %}
+  {% else %}
+    <a class="btn btn-primary btn-lg me-2" href="{% url 'login' %}">Log in</a>
+    <a class="btn btn-outline-primary btn-lg" href="{% url 'register' %}">Student registration</a>
+  {% endif %}
+</div>
+<div class="row g-3 text-center">
+  <div class="col-md-4"><div class="card h-100"><div class="card-body">
+    <h5 class="card-title">For teachers</h5>
+    <p class="card-text text-muted">Quiz builder, shuffling, negative marking, analytics and CSV export.</p>
+  </div></div></div>
+  <div class="col-md-4"><div class="card h-100"><div class="card-body">
+    <h5 class="card-title">For students</h5>
+    <p class="card-text text-muted">Timed quizzes, instant results with explanations, and a leaderboard.</p>
+  </div></div></div>
+  <div class="col-md-4"><div class="card h-100"><div class="card-body">
+    <h5 class="card-title">Fair and secure</h5>
+    <p class="card-text text-muted">The server keeps the clock and the correct answers, not the browser.</p>
+  </div></div></div>
+</div>
+{% endblock %}

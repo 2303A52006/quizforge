@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url 'quizzes:student_list' %}">Quizzes</a></li>
+  <li class="breadcrumb-item active">{{ quiz.title }}</li>
+</ol></nav>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h2 class="h3">{{ quiz.title }} {% include "quizzes/_status_badge.html" with status=status %}</h2>
+    {% if quiz.description %}<p class="text-muted">{{ quiz.description }}</p>{% endif %}
+    <div class="row row-cols-2 row-cols-md-4 g-3 small mb-3">
+      <div class="col"><div class="text-muted">Questions</div><strong>{{ quiz.num_questions }}</strong></div>
+      <div class="col"><div class="text-muted">Time limit</div><strong>{{ quiz.time_limit_minutes }} minutes</strong></div>
+      <div class="col"><div class="text-muted">Pass mark</div><strong>{{ quiz.pass_mark }}%</strong></div>
+      <div class="col"><div class="text-muted">Attempts used</div><strong>{{ attempts_used }} / {{ quiz.max_attempts }}</strong></div>
+      <div class="col"><div class="text-muted">Opens</div><strong>{{ quiz.opens_at|date:"d M Y, H:i" }}</strong></div>
+      <div class="col"><div class="text-muted">Closes</div><strong>{{ quiz.closes_at|date:"d M Y, H:i" }}</strong></div>
+      <div class="col"><div class="text-muted">Negative marking</div>
+        <strong>{% if quiz.negative_marking > 0 %}-{{ quiz.negative_marking }} per wrong answer{% else %}None{% endif %}</strong></div>
+      <div class="col"><div class="text-muted">Shuffled</div>
+        <strong>{% if quiz.shuffle_questions or quiz.shuffle_options %}Yes{% else %}No{% endif %}</strong></div>
+    </div>
+
+    <div class="alert alert-light border small">
+      The timer starts the moment you press <strong>Start</strong> and is kept by the server. Your answers are saved as you go,
+      so a page refresh will not lose them. When time ends the quiz is submitted automatically.
+      Unanswered questions are never penalised.
+    </div>
+
+    {% if in_progress %}
+      <a class="btn btn-warning btn-lg" href="{% url 'quizzes:take' in_progress.pk %}">Resume your attempt</a>
+    {% elif can_start %}
+      <form method="post" action="{% url 'quizzes:start' quiz.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success btn-lg">Start quiz (attempt {{ attempts_used|add:1 }})</button>
+      </form>
+    {% else %}
+      <div class="alert alert-secondary mb-0">{{ reason }}</div>
+    {% endif %}
+  </div>
+</div>
+
+{% if submitted_attempts %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h3 class="h5 mb-0">Your attempts</h3>
+      <a class="btn btn-sm btn-primary" href="{% url 'quizzes:leaderboard' quiz.pk %}">Leaderboard</a>
+    </div>
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>#</th><th>Submitted</th><th>Score</th><th>%</th><th>Result</th><th></th></tr></thead>
+      <tbody>
+      {% for a in submitted_attempts %}
+        <tr>
+          <td>{{ a.attempt_number }}</td>
+          <td>{{ a.submitted_at|date:"d M Y, H:i" }}</td>
+          <td>{{ a.score|floatformat:"-2" }} / {{ a.total_questions }}</td>
+          <td>{{ a.percentage|floatformat:"-1" }}%</td>
+          <td>{% if a.passed %}<span class="badge text-bg-success">Pass</span>{% else %}<span class="badge text-bg-danger">Fail</span>{% endif %}</td>
+          <td><a href="{% url 'quizzes:result' a.pk %}">Review</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

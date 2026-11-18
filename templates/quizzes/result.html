@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Result - {{ quiz.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url 'quizzes:student_list' %}">Quizzes</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'quizzes:detail' quiz.pk %}">{{ quiz.title }}</a></li>
+  <li class="breadcrumb-item active">Result</li>
+</ol></nav>
+
+<div class="card shadow-sm mb-4 border-{% if attempt.passed %}success{% else %}danger{% endif %}">
+  <div class="card-body text-center">
+    <div class="text-muted">{{ quiz.title }} &middot; Attempt {{ attempt.attempt_number }}</div>
+    <div class="display-4 fw-bold">{{ attempt.score|floatformat:"-2" }} <span class="fs-4 text-muted">/ {{ attempt.total_questions }}</span></div>
+    <div class="fs-4">{{ attempt.percentage|floatformat:"-1" }}%
+      {% if attempt.passed %}<span class="badge text-bg-success">PASSED</span>{% else %}<span class="badge text-bg-danger">FAILED</span>{% endif %}
+    </div>
+    <div class="text-muted small mt-1">Pass mark: {{ quiz.pass_mark }}%</div>
+    <div class="row justify-content-center mt-3 small">
+      <div class="col-auto"><span class="badge text-bg-success">{{ attempt.correct_count }}</span> correct</div>
+      <div class="col-auto"><span class="badge text-bg-danger">{{ attempt.wrong_count }}</span> wrong</div>
+      <div class="col-auto"><span class="badge text-bg-secondary">{{ attempt.unanswered_count }}</span> unanswered</div>
+      <div class="col-auto">Time taken: <strong>{{ attempt.duration_display }}</strong></div>
+    </div>
+    {% if quiz.negative_marking > 0 %}
+      <div class="small text-muted mt-2">Negative marking: -{{ quiz.negative_marking }} per wrong answer (unanswered questions are not penalised; the score never goes below 0).</div>
+    {% endif %}
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+      <a class="btn btn-primary" href="{% url 'quizzes:leaderboard' quiz.pk %}">Leaderboard</a>
+      <a class="btn btn-outline-secondary" href="{% url 'quizzes:student_list' %}">All quizzes</a>
+      {% if can_retry %}
+        <form method="post" action="{% url 'quizzes:start' quiz.pk %}">
+          {% csrf_token %}<button class="btn btn-success" type="submit">Try again</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h3 class="h5">Attempt history ({{ attempts_used }} of {{ quiz.max_attempts }} used)</h3>
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>#</th><th>Submitted</th><th>Score</th><th>%</th><th>Time</th><th>Result</th><th></th></tr></thead>
+      <tbody>
+      {% for a in history %}
+        <tr class="{% if a.pk == attempt.pk %}table-primary{% endif %}">
+          <td>{{ a.attempt_number }}{% if best and a.pk == best.pk %} <span class="badge text-bg-warning">Best</span>{% endif %}</td>
+          <td>{{ a.submitted_at|date:"d M Y, H:i" }}</td>
+          <td>{{ a.score|floatformat:"-2" }} / {{ a.total_questions }}</td>
+          <td>{{ a.percentage|floatformat:"-1" }}%</td>
+          <td>{{ a.duration_display }}</td>
+          <td>{% if a.passed %}<span class="badge text-bg-success">Pass</span>{% else %}<span class="badge text-bg-danger">Fail</span>{% endif %}</td>
+          <td>{% if a.pk != attempt.pk %}<a href="{% url 'quizzes:result' a.pk %}">Review</a>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h3 class="h5 mb-3">Review</h3>
+{% for item in review %}
+  <div class="card mb-3 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex justify-content-between">
+        <h4 class="h6">Question {{ item.number }}
+          {% if item.state == "correct" %}<span class="badge text-bg-success">Correct</span>
+          {% elif item.state == "wrong" %}<span class="badge text-bg-danger">Wrong</span>
+          {% else %}<span class="badge text-bg-secondary">Not answered</span>{% endif %}
+        </h4>
+        <span class="badge text-bg-light border">{{ item.question.topic }}</span>
+      </div>
+      <p>{{ item.question.text|linebreaksbr }}</p>
+      <ul class="list-group mb-2">
+        {% for option in item.options %}
+          <li class="list-group-item {% if option.is_correct %}list-group-item-success{% elif option.is_selected %}list-group-item-danger{% endif %}">
+            {{ option.text }}
+            {% if option.is_correct %}<span class="float-end small fw-semibold">&#10003; Correct answer</span>{% endif %}
+            {% if option.is_selected %}<span class="float-end small fw-semibold{% if option.is_correct %} me-3{% endif %}">Your answer</span>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      {% if item.question.explanation %}
+        <div class="small"><strong>Explanation:</strong> {{ item.question.explanation }}</div>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{% if quiz %}Edit quiz{% else %}New quiz{% endif %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <h2 class="h3 mb-3">{% if quiz %}Edit quiz settings{% else %}Create a quiz{% endif %}</h2>
+    <form method="post" class="card shadow-sm" novalidate>
+      <div class="card-body">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+          {{ form.title }}
+          {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
+          {{ form.description }}
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label" for="{{ form.time_limit_minutes.id_for_label }}">{{ form.time_limit_minutes.label }}</label>
+            {{ form.time_limit_minutes }}
+            {% for error in form.time_limit_minutes.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label" for="{{ form.pass_mark.id_for_label }}">{{ form.pass_mark.label }}</label>
+            {{ form.pass_mark }}
+            {% for error in form.pass_mark.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label" for="{{ form.max_attempts.id_for_label }}">{{ form.max_attempts.label }}</label>
+            {{ form.max_attempts }}
+            {% for error in form.max_attempts.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="{{ form.opens_at.id_for_label }}">{{ form.opens_at.label }}</label>
+            {{ form.opens_at }}
+            {% for error in form.opens_at.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label" for="{{ form.closes_at.id_for_label }}">{{ form.closes_at.label }}</label>
+            {{ form.closes_at }}
+            {% for error in form.closes_at.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="form-text mb-3">Students can only start the quiz between these two times. Both are needed before you can publish.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.negative_marking.id_for_label }}">{{ form.negative_marking.label }}</label>
+          {{ form.negative_marking }}
+          <div class="form-text">{{ form.negative_marking.help_text }} Each question is worth 1 mark. Scores never go below 0.</div>
+          {% for error in form.negative_marking.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="form-check mb-2">
+          {{ form.shuffle_questions }}
+          <label class="form-check-label" for="{{ form.shuffle_questions.id_for_label }}">{{ form.shuffle_questions.label }}</label>
+        </div>
+        <div class="form-check mb-3">
+          {{ form.shuffle_options }}
+          <label class="form-check-label" for="{{ form.shuffle_options.id_for_label }}">{{ form.shuffle_options.label }}</label>
+        </div>
+      </div>
+      <div class="card-footer d-flex gap-2">
+        <button type="submit" class="btn btn-primary">{% if quiz %}Save settings{% else %}Create quiz{% endif %}</button>
+        <a class="btn btn-outline-secondary" href="{% if quiz %}{% url 'quizzes:manage' quiz.pk %}{% else %}{% url 'quizzes:teacher_list' %}{% endif %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

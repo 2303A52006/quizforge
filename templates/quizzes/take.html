@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block content %}
+<div id="quiz-root" data-remaining="{{ remaining_seconds }}" data-save-url="{% url 'quizzes:save_answer' attempt.pk %}">
+
+  <div class="card shadow-sm mb-3 sticky-top timer-bar">
+    <div class="card-body py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <strong>{{ quiz.title }}</strong>
+        <span class="text-muted small ms-2">Attempt {{ attempt.attempt_number }} of {{ quiz.max_attempts }}</span>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="small text-muted"><span id="answered-count">{{ answered }}</span> / {{ items|length }} answered</span>
+        <span class="small text-muted" id="save-status" aria-live="polite"></span>
+        <span class="fs-4 fw-bold font-monospace" id="timer" aria-label="Time remaining">--:--</span>
+      </div>
+    </div>
+  </div>
+
+  <form id="quiz-form" method="post" action="{% url 'quizzes:submit' attempt.pk %}">
+    {% csrf_token %}
+    {% for item in items %}
+      <div class="card mb-3 shadow-sm question-card" data-question="{{ item.id }}">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <h3 class="h6 text-primary">Question {{ forloop.counter }}</h3>
+            <span class="badge text-bg-light border">{{ item.topic }}</span>
+          </div>
+          <p class="mb-3">{{ item.text|linebreaksbr }}</p>
+          {% for option in item.options %}
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="q_{{ item.id }}" id="opt-{{ option.id }}" value="{{ option.id }}"{% if item.selected == option.id %} checked{% endif %}>
+              <label class="form-check-label" for="opt-{{ option.id }}">{{ option.text }}</label>
+            </div>
+          {% endfor %}
+          <button type="button" class="btn btn-link btn-sm p-0 text-muted" data-clear="{{ item.id }}">Clear my answer</button>
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="d-grid gap-2 mb-5">
+      <button type="submit" id="submit-btn" class="btn btn-primary btn-lg">Submit quiz</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/take_quiz.js' %}"></script>
+{% endblock %}

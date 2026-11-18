@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Quizzes{% endblock %}
+{% block content %}
+<h2 class="h3 mb-4">Quizzes</h2>
+
+<h3 class="h5 text-success">Open now</h3>
+<div class="row g-3 mb-4">
+  {% for entry in open_now %}{% include "quizzes/_student_quiz_card.html" %}
+  {% empty %}<div class="col-12"><div class="alert alert-light border">No quizzes are open right now.</div></div>{% endfor %}
+</div>
+
+<h3 class="h5 text-info">Upcoming</h3>
+<div class="row g-3 mb-4">
+  {% for entry in upcoming %}{% include "quizzes/_student_quiz_card.html" %}
+  {% empty %}<div class="col-12"><div class="alert alert-light border">No upcoming quizzes.</div></div>{% endfor %}
+</div>
+
+<h3 class="h5 text-secondary">Closed</h3>
+<div class="row g-3 mb-4">
+  {% for entry in closed %}{% include "quizzes/_student_quiz_card.html" %}
+  {% empty %}<div class="col-12"><div class="alert alert-light border">No closed quizzes.</div></div>{% endfor %}
+</div>
+{% endblock %}

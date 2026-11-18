@@ -1,0 +1,4 @@
+{% if status == "draft" %}<span class="badge text-bg-secondary">Draft</span>
+{% elif status == "upcoming" %}<span class="badge text-bg-info">Upcoming</span>
+{% elif status == "open" %}<span class="badge text-bg-success">Open</span>
+{% elif status == "closed" %}<span class="badge text-bg-dark">Closed</span>{% endif %}

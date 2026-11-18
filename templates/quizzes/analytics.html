@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Analytics - {{ quiz.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url 'quizzes:teacher_list' %}">My quizzes</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'quizzes:manage' quiz.pk %}">{{ quiz.title }}</a></li>
+  <li class="breadcrumb-item active">Analytics</li>
+</ol></nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h2 class="h3 mb-0">Analytics: {{ quiz.title }}</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-sm btn-primary" href="{% url 'quizzes:leaderboard' quiz.pk %}">Leaderboard</a>
+    <a class="btn btn-sm btn-outline-dark" href="{% url 'quizzes:export_csv' quiz.pk %}">Export CSV</a>
+  </div>
+</div>
+<p class="text-muted small">Based on each student's best attempt.</p>
+
+{% if not stats.has_data %}
+  <div class="alert alert-info">No student has finished this quiz yet, so there is nothing to analyse.</div>
+{% else %}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="card text-center shadow-sm"><div class="card-body">
+      <div class="text-muted small">Students</div><div class="fs-3 fw-bold">{{ stats.students }}</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card text-center shadow-sm"><div class="card-body">
+      <div class="text-muted small">Average</div>
+      <div class="fs-3 fw-bold">{{ stats.average_score|floatformat:"-2" }}<span class="fs-6 text-muted"> / {{ stats.total_marks }}</span></div>
+      <div class="small text-muted">{{ stats.average_percentage }}%</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card text-center shadow-sm"><div class="card-body">
+      <div class="text-muted small">Highest</div><div class="fs-3 fw-bold text-success">{{ stats.highest_score|floatformat:"-2" }}</div></div></div></div>
+    <div class="col-6 col-md-3"><div class="card text-center shadow-sm"><div class="card-body">
+      <div class="text-muted small">Lowest</div><div class="fs-3 fw-bold text-danger">{{ stats.lowest_score|floatformat:"-2" }}</div></div></div></div>
+    <div class="col-12"><div class="card text-center shadow-sm"><div class="card-body">
+      <div class="text-muted small">Pass rate (pass mark {{ quiz.pass_mark }}%)</div>
+      <div class="fs-3 fw-bold">{{ stats.pass_rate }}%</div></div></div></div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6"><div class="card shadow-sm h-100"><div class="card-body">
+      <h3 class="h6">Score distribution (students per percentage band)</h3>
+      <canvas id="distributionChart" height="200"></canvas>
+    </div></div></div>
+    <div class="col-lg-6"><div class="card shadow-sm h-100"><div class="card-body">
+      <h3 class="h6">Topic-wise performance (% correct)</h3>
+      <canvas id="topicChart" height="200"></canvas>
+    </div></div></div>
+    <div class="col-12"><div class="card shadow-sm"><div class="card-body">
+      <h3 class="h6">Percentage correct per question</h3>
+      <canvas id="questionChart" height="110"></canvas>
+    </div></div></div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h3 class="h5">Weak topics</h3>
+      {% if stats.weak_topics %}
+        <p class="text-muted small">Topics where fewer than 50% of answers were correct. Consider re-teaching these.</p>
+        <ul class="mb-0">
+          {% for t in stats.weak_topics %}
+            <li><strong>{{ t.topic }}</strong> &ndash; {{ t.percent_correct }}% correct</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="mb-0 text-success">No weak topics: every topic is at 50% or above.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card shadow-sm"><div class="card-body">
+        <h3 class="h5">Topics</h3>
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Topic</th><th>% correct</th><th></th></tr></thead>
+          <tbody>
+          {% for t in stats.topics %}
+            <tr><td>{{ t.topic }}</td><td>{{ t.percent_correct }}%</td>
+                <td>{% if t.weak %}<span class="badge text-bg-danger">Weak</span>{% else %}<span class="badge text-bg-success">OK</span>{% endif %}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+    <div class="col-lg-7">
+      <div class="card shadow-sm"><div class="card-body">
+        <h3 class="h5">Questions</h3>
+        <table class="table table-sm mb-0">
+          <thead><tr><th>#</th><th>Question</th><th>Topic</th><th>% correct</th></tr></thead>
+          <tbody>
+          {% for q in stats.per_question %}
+            <tr><td>Q{{ q.number }}</td><td>{{ q.text|truncatechars:80 }}</td><td>{{ q.topic }}</td><td>{{ q.percent_correct }}%</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+  </div>
+  {{ chart_data|json_script:"chart-data" }}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if stats.has_data %}
+{% load static %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/analytics.js' %}"></script>
+{% endif %}
+{% endblock %}

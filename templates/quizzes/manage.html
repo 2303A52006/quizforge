@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url 'quizzes:teacher_list' %}">My quizzes</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ quiz.title }}</li>
+</ol></nav>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <div>
+        <h2 class="h3 mb-1">{{ quiz.title }} {% include "quizzes/_status_badge.html" with status=quiz.status %}</h2>
+        {% if quiz.description %}<p class="text-muted mb-2">{{ quiz.description }}</p>{% endif %}
+      </div>
+      <div class="d-flex flex-wrap gap-2 align-items-start">
+        <a class="btn btn-outline-secondary" href="{% url 'quizzes:edit' quiz.pk %}">Edit settings</a>
+        <form method="post" action="{% url 'quizzes:duplicate' quiz.pk %}">
+          {% csrf_token %}<button class="btn btn-outline-secondary" type="submit">Duplicate</button>
+        </form>
+        <form method="post" action="{% url 'quizzes:publish' quiz.pk %}">
+          {% csrf_token %}
+          {% if quiz.is_published %}
+            <button class="btn btn-warning" type="submit">Move back to draft</button>
+          {% else %}
+            <button class="btn btn-success" type="submit">Publish</button>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+    <hr>
+    <div class="row row-cols-2 row-cols-md-4 g-3 small">
+      <div class="col"><div class="text-muted">Time limit</div><strong>{{ quiz.time_limit_minutes }} min</strong></div>
+      <div class="col"><div class="text-muted">Pass mark</div><strong>{{ quiz.pass_mark }}%</strong></div>
+      <div class="col"><div class="text-muted">Max attempts</div><strong>{{ quiz.max_attempts }}</strong></div>
+      <div class="col"><div class="text-muted">Negative marking</div><strong>{{ quiz.negative_marking }} per wrong answer</strong></div>
+      <div class="col"><div class="text-muted">Opens</div><strong>{{ quiz.opens_at|date:"d M Y, H:i"|default:"not set" }}</strong></div>
+      <div class="col"><div class="text-muted">Closes</div><strong>{{ quiz.closes_at|date:"d M Y, H:i"|default:"not set" }}</strong></div>
+      <div class="col"><div class="text-muted">Shuffle questions</div><strong>{{ quiz.shuffle_questions|yesno:"On,Off" }}</strong></div>
+      <div class="col"><div class="text-muted">Shuffle options</div><strong>{{ quiz.shuffle_options|yesno:"On,Off" }}</strong></div>
+    </div>
+    <hr>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-sm btn-success" href="{% url 'quizzes:analytics' quiz.pk %}">Analytics</a>
+      <a class="btn btn-sm btn-primary" href="{% url 'quizzes:leaderboard' quiz.pk %}">Leaderboard</a>
+      <a class="btn btn-sm btn-outline-dark" href="{% url 'quizzes:export_csv' quiz.pk %}">Export results (CSV)</a>
+      <span class="align-self-center text-muted small">{{ submitted_count }} finished attempt{{ submitted_count|pluralize }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h3 class="h5 mb-0">Questions ({{ questions|length }})</h3>
+  {% if not locked %}
+    <a class="btn btn-primary btn-sm" href="{% url 'quizzes:question_add' quiz.pk %}">+ Add question</a>
+  {% endif %}
+</div>
+{% if locked %}
+  <div class="alert alert-warning py-2">Students have attempted this quiz, so its questions are locked. Use <strong>Duplicate</strong> to make an editable copy.</div>
+{% endif %}
+
+{% for question in questions %}
+  <div class="card mb-2 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex justify-content-between gap-2">
+        <div>
+          <span class="badge text-bg-primary">{{ question.topic }}</span>
+          <strong class="ms-1">Q{{ forloop.counter }}.</strong> {{ question.text }}
+        </div>
+        {% if not locked %}
+        <div class="text-nowrap">
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'quizzes:question_edit' quiz.pk question.pk %}">Edit</a>
+          <form method="post" action="{% url 'quizzes:question_delete' quiz.pk question.pk %}" class="d-inline"
+                onsubmit="return confirm('Delete this question?');">
+            {% csrf_token %}<button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+      <ul class="list-unstyled mt-2 mb-1 small">
+        {% for option in question.options.all %}
+          <li class="{% if option.is_correct %}text-success fw-semibold{% endif %}">
+            {{ forloop.counter0|add:1 }}. {{ option.text }} {% if option.is_correct %}&#10003; correct{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      {% if question.explanation %}<div class="small text-muted">Explanation: {{ question.explanation }}</div>{% endif %}
+    </div>
+  </div>
+{% empty %}
+  <div class="alert alert-info">No questions yet. Click <strong>Add question</strong>.</div>
+{% endfor %}
+{% endblock %}
